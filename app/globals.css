@@ -1,26 +1,998 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-script: var(--font-great-vibes), "Great Vibes", cursive;
+  --font-display: var(--font-cinzel), "Cinzel", serif;
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-arabic: var(--font-amiri), "Amiri", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --color-ivory: #fdf9f1;
+  --color-paper: #f3eadb;
+  --color-parchment: #ece0c8;
+  --color-ink: #39332c;
+  --color-ink-soft: #675d50;
+
+  --color-gold-50: #fbf5e4;
+  --color-gold-100: #f6ebcd;
+  --color-gold-200: #eedbab;
+  --color-gold-300: #e0c27e;
+  --color-gold-400: #cfa75a;
+  --color-gold-500: #b98e3d;
+  --color-gold-600: #9a732a;
+  --color-gold-700: #7a5a1f;
+
+  --color-sage-100: #e6e8dc;
+  --color-sage-200: #cfd3bf;
+  --color-sage-300: #b4bba1;
+  --color-sage-400: #99a185;
+  --color-sage-500: #808a6b;
+  --color-sage-600: #6a7356;
+  --color-sage-700: #545c43;
+
+  --ease-luxe: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- Base ---------- */
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  html.is-locked {
+    overflow: hidden;
+  }
+
+  body {
+    min-height: 100svh;
+    overflow-x: clip;
+    color: var(--color-ink);
+    font-family: var(--font-serif);
+    background-color: var(--color-paper);
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .34 0 0 0 0 .2 0 0 0 .075 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      radial-gradient(90% 60% at 18% 0%, rgb(222 190 120 / 0.16), transparent 60%),
+      radial-gradient(80% 60% at 90% 100%, rgb(153 161 133 / 0.18), transparent 60%);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--color-gold-200);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 3px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Lenis (copied rules; its stock CSS disables iframes, which breaks the map). */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* ---------- Utilities ---------- */
+
+@utility text-gold {
+  background-image: linear-gradient(
+    100deg,
+    #7a5a1f 0%,
+    #b98e3d 24%,
+    #e9cd86 46%,
+    #c69b47 62%,
+    #8a6620 100%
+  );
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--color-gold-600);
+}
+
+/* ---------- Components ---------- */
+
+@layer components {
+  /* The invitation card: one long ivory panel with an arched top. */
+  .arch-card {
+    position: relative;
+    container-type: inline-size;
+  }
+
+  .arch-card__bg {
+    position: absolute;
+    inset: 0;
+    filter: drop-shadow(0 30px 45px rgb(110 86 40 / 0.16))
+      drop-shadow(0 2px 6px rgb(110 86 40 / 0.08));
+  }
+
+  .arch-card__bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(120% 40cqw at 50% 0%, #fffdf8 0%, transparent 70%),
+      radial-gradient(90% 60% at 50% 45%, rgb(255 255 255 / 0.55), transparent 70%),
+      linear-gradient(180deg, #fcf7ee 0%, #faf3e6 50%, #f8f0e1 100%);
+    -webkit-mask:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 160' preserveAspectRatio='none'%3E%3Cpath d='M0 160L0 118C0 72 64 62 116 54C158 47 186 30 200 0C214 30 242 47 284 54C336 62 400 72 400 118L400 160Z'/%3E%3C/svg%3E")
+        0 0 / 100% 40cqw no-repeat,
+      linear-gradient(#000 0 0) 0 calc(40cqw - 1px) / 100% 100% no-repeat;
+    mask:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 160' preserveAspectRatio='none'%3E%3Cpath d='M0 160L0 118C0 72 64 62 116 54C158 47 186 30 200 0C214 30 242 47 284 54C336 62 400 72 400 118L400 160Z'/%3E%3C/svg%3E")
+        0 0 / 100% 40cqw no-repeat,
+      linear-gradient(#000 0 0) 0 calc(40cqw - 1px) / 100% 100% no-repeat;
+  }
+
+  .frame-line {
+    position: absolute;
+    pointer-events: none;
+    background: var(--color-gold-400);
+  }
+  .frame-line--outer-l,
+  .frame-line--outer-r {
+    top: calc(40cqw - 2px);
+    bottom: 0;
+    width: 1px;
+    transform-origin: 50% 0;
+  }
+  .frame-line--outer-l {
+    left: -0.5px;
+  }
+  .frame-line--outer-r {
+    right: -0.5px;
+  }
+  .frame-line--outer-b {
+    bottom: -0.5px;
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+  .frame-line--inner-l,
+  .frame-line--inner-r {
+    top: calc(40cqw - 2px);
+    bottom: 2cqw;
+    width: 1px;
+    background: linear-gradient(180deg, var(--color-gold-300), var(--color-gold-200));
+    transform-origin: 50% 0;
+  }
+  .frame-line--inner-l {
+    left: calc(2cqw - 0.5px);
+  }
+  .frame-line--inner-r {
+    right: calc(2cqw - 0.5px);
+  }
+  .frame-line--inner-b {
+    bottom: calc(2cqw - 0.5px);
+    left: 2cqw;
+    right: 2cqw;
+    height: 1px;
+    background: var(--color-gold-300);
+  }
+
+  /* Gold text that writes itself left → right (GSAP tweens --p). */
+  .write-on {
+    --p: 125%;
+    display: inline-block;
+    padding: 0.12em 0.35em 0.2em;
+    margin: -0.12em -0.35em -0.2em;
+    -webkit-mask-image: linear-gradient(100deg, #000 var(--p), transparent calc(var(--p) + 22%));
+    mask-image: linear-gradient(100deg, #000 var(--p), transparent calc(var(--p) + 22%));
+  }
+
+  .glyph {
+    fill: url(#gold-sheen);
+    stroke: #9a732a;
+    stroke-width: 0.7;
+    stroke-linejoin: round;
+    stroke-opacity: 0;
+  }
+
+  /* Lanterns */
+  .lantern-sway {
+    transform-origin: 50% 0;
+    animation: sway 5.8s ease-in-out infinite alternate;
+  }
+  .lantern-sway--slow {
+    animation-duration: 7.4s;
+    animation-delay: -2.2s;
+  }
+  .lantern-flame {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: flame 1.7s ease-in-out infinite;
+  }
+  .lantern-glow {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: flicker 3.4s ease-in-out infinite;
+  }
+
+  .floral-breathe {
+    animation: breathe 9s ease-in-out infinite alternate;
+  }
+
+  /* Sage arches behind the card */
+  .sage-arch {
+    position: absolute;
+    bottom: -8vh;
+    height: 82vh;
+    width: clamp(150px, 23vw, 360px);
+    border-radius: 999px 999px 0 0;
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgb(255 255 255 / 0.18), transparent 60%),
+      linear-gradient(180deg, #aab197 0%, #8d977a 55%, #7b8566 100%);
+    box-shadow: inset 0 0 40px rgb(60 66 44 / 0.18);
+  }
+  .sage-arch::before {
+    content: "";
+    position: absolute;
+    inset: 12px 12px 0;
+    border: 1px solid rgb(232 205 140 / 0.7);
+    border-bottom: 0;
+    border-radius: inherit;
+  }
+  .sage-arch--left {
+    right: calc(50% + min(50vw - 0.75rem, 22rem) - 52px);
+  }
+  .sage-arch--right {
+    left: calc(50% + min(50vw - 0.75rem, 22rem) - 52px);
+    height: 70vh;
+  }
+
+  /* ---------- Gate (opening doors) ---------- */
+  .gate {
+    perspective: 2400px;
+  }
+  /* Revealed by the gate intro timeline (or instantly with reduced motion). */
+  .gate .js-gate-copy,
+  .gate .js-seal,
+  .door__rosette {
+    opacity: 0;
+    visibility: hidden;
+  }
+  /*
+   * Own GPU layers: fading/scaling these is then compositor-only, and the
+   * rosettes' stroke drawing repaints just themselves, not the textured doors.
+   */
+  .gate .js-gate-copy,
+  .gate .js-seal,
+  .gate-flash,
+  .seam-light {
+    will-change: transform, opacity;
+  }
+  .door__rosette {
+    will-change: transform;
+  }
+  /* Everything behind the closed gate holds still (SVG loops repaint every frame). */
+  html.is-locked
+    :is(.lantern-sway, .lantern-flame, .lantern-glow, .floral-breathe, .heartbeat, .scroll-cue__line) {
+    animation-play-state: paused;
+  }
+  .door {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50.2%;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+  .door--left {
+    left: 0;
+    transform-origin: 0 50%;
+  }
+  .door--right {
+    right: 0;
+    transform-origin: 100% 50%;
+  }
+  .door__face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .12 0 0 0 0 .06 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      radial-gradient(140% 70% at 50% 8%, #a7af93 0%, #87916f 48%, #69734f 100%);
+  }
+  .door--left .door__face {
+    box-shadow:
+      inset -26px 0 34px -22px rgb(30 34 20 / 0.6),
+      inset 1px 0 0 rgb(255 255 255 / 0.08);
+  }
+  .door--right .door__face {
+    box-shadow:
+      inset 26px 0 34px -22px rgb(30 34 20 / 0.6),
+      inset -1px 0 0 rgb(255 255 255 / 0.08);
+  }
+  .door__frame {
+    position: absolute;
+    inset: 16px;
+    border: 1px solid rgb(232 205 140 / 0.55);
+  }
+  .door--left .door__frame {
+    right: 10px;
+  }
+  .door--right .door__frame {
+    left: 10px;
+  }
+  .door__arch {
+    position: absolute;
+    top: 14%;
+    bottom: 9%;
+    left: 17%;
+    right: 17%;
+    border: 1.5px solid rgb(230 200 128 / 0.95);
+    border-radius: 999px 999px 4px 4px;
+    background-color: rgb(70 78 52 / 0.18);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23e8cd8c' stroke-opacity='.38' stroke-width='.9'%3E%3Crect x='13' y='13' width='18' height='18'/%3E%3Crect x='13' y='13' width='18' height='18' transform='rotate(45 22 22)'/%3E%3Cpath d='M0 0L9.3 9.3M44 0L34.7 9.3M0 44L9.3 34.7M44 44L34.7 34.7'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 44px 44px;
+    background-position: center top;
+    box-shadow:
+      inset 0 0 0 7px rgb(80 88 60 / 0.2),
+      0 0 0 1px rgb(40 46 28 / 0.15);
+  }
+  .door__arch::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border: 1px solid rgb(230 200 128 / 0.6);
+    border-radius: inherit;
+  }
+  .door__rosette {
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    width: 30%;
+    max-width: 96px;
+    translate: -50% 0;
+  }
+  .door__knob {
+    position: absolute;
+    top: 56%;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 35% 30%, #fbe9b4, #c79b48 55%, #7d5a1d);
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.35);
+  }
+  .door--left .door__knob {
+    right: 26px;
+  }
+  .door--right .door__knob {
+    left: 26px;
+  }
+
+  .seam-light {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
+    opacity: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 244 210 / 0.95),
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .seal {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 128px;
+    height: 128px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  /* Shadow on the wax only, so the pulsing rings don't re-run the filter every frame. */
+  .seal > svg {
+    filter: drop-shadow(0 12px 18px rgb(30 26 12 / 0.45));
+  }
+  .seal::before,
+  .seal::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 999px;
+    border: 1.5px solid rgb(244 220 150 / 0.75);
+    animation: pulse-ring 2.6s var(--ease-luxe) infinite;
+    pointer-events: none;
+  }
+  .seal::after {
+    animation-delay: 1.3s;
+  }
+
+  .gate-flash {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 140px;
+    height: 140px;
+    margin: -70px 0 0 -70px;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      circle,
+      rgb(255 249 226) 0%,
+      rgb(246 220 150 / 0.75) 35%,
+      rgb(246 220 150 / 0) 70%
+    );
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn-gold,
+  .btn-ghost {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 3rem;
+    padding: 0.85rem 1.6rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    overflow: hidden;
+    isolation: isolate;
+    /* Hover lifts with `translate` so GSAP can own `transform`. */
+    transition:
+      translate 0.45s var(--ease-luxe),
+      box-shadow 0.45s var(--ease-luxe),
+      background-color 0.45s;
+  }
+  .btn-gold {
+    color: #fffaf0;
+    text-shadow: 0 1px 1px rgb(80 56 14 / 0.45);
+    background: linear-gradient(135deg, #7a5a1f 0%, #a57d30 38%, #c9a04f 58%, #93702a 100%);
+    box-shadow:
+      0 14px 28px -14px rgb(122 90 31 / 0.8),
+      inset 0 1px 0 rgb(255 255 255 / 0.35);
+  }
+  .btn-ghost {
+    color: var(--color-gold-700);
+    background: rgb(255 252 245 / 0.75);
+    box-shadow: inset 0 0 0 1px var(--color-gold-300);
+  }
+  .btn-gold::after,
+  .btn-ghost::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(100deg, transparent 25%, rgb(255 255 255 / 0.55) 50%, transparent 75%);
+    transform: translateX(-130%);
+  }
+  .btn-gold::after {
+    animation: sheen 4.5s var(--ease-luxe) infinite 2s;
+  }
+  .btn-gold:hover,
+  .btn-ghost:hover {
+    translate: 0 -2px;
+  }
+  .btn-ghost:hover {
+    background: #fff;
+  }
+  .btn-ghost:hover::after {
+    animation: sheen 1.1s var(--ease-luxe);
+  }
+
+  /* ---------- Countdown ---------- */
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 1.4rem 0.25rem 0.9rem;
+    border-radius: 999px 999px 14px 14px;
+    background: linear-gradient(180deg, #fffdf8, #f7eedd);
+    box-shadow:
+      inset 0 0 0 1px var(--color-gold-300),
+      inset 0 0 0 5px #fffdf8,
+      inset 0 0 0 6px rgb(224 194 126 / 0.45),
+      0 18px 30px -22px rgb(110 86 40 / 0.55);
+  }
+  .digit {
+    display: inline-block;
+    animation: digit-in 0.55s var(--ease-luxe);
+  }
+
+  /* Rolling "05" in the date block */
+  .reel {
+    display: inline-block;
+    height: 1em;
+    overflow: hidden;
+    vertical-align: top;
+  }
+  .reel__track {
+    display: flex;
+    flex-direction: column;
+  }
+  .reel__track > span {
+    height: 1em;
+    line-height: 1;
+  }
+
+  /* Venue */
+  /*
+   * Map window with an ogee (pointed Islamic) crown, matching the invitation
+   * card's arch. Layers, outside in: metallic gold edge (.map-frame), ivory
+   * mat, gold hairline (.map-frame__inner), the map (.map-frame__window).
+   * Each layer is masked by the same crown sized from its own width (--w, in
+   * cqw of the wrapping @container), so the curves stay parallel at any size.
+   */
+  .map-shell {
+    --ogee-crown: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 136' preserveAspectRatio='none'%3E%3Cpath d='M0 136L0 100.3C0 61.2 64 52.7 116 45.9C158 40 186 25.5 200 0C214 25.5 242 40 284 45.9C336 52.7 400 61.2 400 100.3L400 136Z'/%3E%3C/svg%3E");
+    position: relative;
+    isolation: isolate;
+  }
+  .ogee {
+    --ogee-h: calc(var(--w, 100cqw) * 0.34);
+    -webkit-mask:
+      var(--ogee-crown) 0 0 / 100% var(--ogee-h) no-repeat,
+      linear-gradient(#000 0 0) 0 calc(var(--ogee-h) - 1px) / 100% 100% no-repeat;
+    mask:
+      var(--ogee-crown) 0 0 / 100% var(--ogee-h) no-repeat,
+      linear-gradient(#000 0 0) 0 calc(var(--ogee-h) - 1px) / 100% 100% no-repeat;
+  }
+  /* Soft shadow in the arch's own shape (static, so it rasterises once). */
+  .map-shell__shadow {
+    --w: 100cqw;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 0 0 18px 18px;
+    background: rgb(110 86 40 / 0.6);
+    filter: blur(14px);
+    opacity: 0.45;
+    translate: 0 16px;
+    scale: 0.95;
+  }
+  .map-frame {
+    --w: 100cqw;
+    --pad: clamp(7px, 2.4cqw, 10px);
+    position: relative;
+    border-radius: 0 0 18px 18px;
+    background: linear-gradient(165deg, #e3c47c 0%, #b98e3d 38%, #dcbb70 62%, #8a6620 100%);
+  }
+  .map-frame__mat {
+    --w: calc(100cqw - 3px);
+    position: absolute;
+    inset: 1.5px;
+    border-radius: 0 0 17px 17px;
+    background: linear-gradient(180deg, #fffdf8 0%, #fbf4e6 100%);
+  }
+  .map-frame__inner {
+    --w: calc(100cqw - 2 * var(--pad));
+    position: absolute;
+    inset: var(--pad);
+    z-index: 1;
+    border-radius: 0 0 10px 10px;
+    background: var(--color-gold-300);
+  }
+  .map-frame__window {
+    --w: calc(100cqw - 2 * var(--pad) - 2px);
+    position: absolute;
+    inset: 1px;
+    overflow: hidden;
+    /* Small bottom radius so Google's attribution line isn't clipped. */
+    border-radius: 0 0 9px 9px;
+    background: var(--color-paper);
+    isolation: isolate;
+  }
+  /* Gold keystone + finial at the apex; outside the mask so it isn't clipped. */
+  .map-keystone {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 4;
+    width: 10px;
+    height: 10px;
+    translate: -50% -55%;
+    rotate: 45deg;
+    background: linear-gradient(135deg, #f2dc9e, #b98e3d 55%, #7a5a1f);
+    box-shadow:
+      0 0 0 3px #fffdf8,
+      0 0 0 4px var(--color-gold-300);
+    pointer-events: none;
+  }
+  /* Taller than the window so Google's "Open in Maps" card sits above the arch. */
+  .map-frame__map {
+    position: absolute;
+    inset: -64px 0 0;
+    transform-origin: 50% 100%;
+    transition: scale 1.4s var(--ease-luxe);
+  }
+  .map-frame__map iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    filter: sepia(0.3) saturate(0.85) contrast(0.97);
+  }
+  /* Soft ivory light pooling under the crown. */
+  .map-frame__glow {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(120% 34% at 50% 0%, rgb(253 249 241 / 0.92), rgb(253 249 241 / 0) 72%);
+  }
+  .map-frame__link {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+  }
+  .map-chip {
+    position: absolute;
+    top: 16%;
+    left: 50%;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.95rem 0.55rem 1.1rem;
+    border-radius: 999px;
+    translate: -50% 0;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-gold-700);
+    background: rgb(255 252 245 / 0.92);
+    box-shadow:
+      inset 0 0 0 1px var(--color-gold-300),
+      0 10px 22px -12px rgb(110 86 40 / 0.65);
+    transition:
+      translate 0.45s var(--ease-luxe),
+      background-color 0.45s;
+  }
+  @media (hover: hover) {
+    /* Kept small so Google's attribution row never slides out of view. */
+    .map-frame:hover .map-frame__map {
+      scale: 1.015;
+    }
+    .map-frame:hover .map-chip {
+      translate: -50% -2px;
+      background: #fff;
+    }
+  }
+  /* Gentle gold ripple on the venue (the iframe centres the place it searched for). */
+  .map-ping {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 72px;
+    height: 72px;
+    translate: -50% -50%;
+    pointer-events: none;
+  }
+  .map-ping::before,
+  .map-ping::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgb(185 142 61 / 0.9);
+    background: radial-gradient(circle, rgb(207 167 90 / 0.28), rgb(207 167 90 / 0.08) 70%);
+    animation: map-ping 3s var(--ease-luxe) infinite;
+  }
+  .map-ping::after {
+    animation-delay: 1.5s;
+  }
+  /* The beam travels with transform (compositor) rather than `top` (layout). */
+  .qr-scan {
+    position: absolute;
+    top: 8%;
+    bottom: 10%;
+    left: 6%;
+    right: 6%;
+    pointer-events: none;
+    animation: scan 3.2s ease-in-out infinite;
+  }
+  .qr-scan::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-gold-400), transparent);
+    box-shadow: 0 0 12px 2px rgb(207 167 90 / 0.55);
+  }
+
+  /* Brighter one-shot beam that "prints" the code during the entrance (GSAP). */
+  .qr-beam {
+    position: absolute;
+    top: 6%;
+    bottom: 8%;
+    left: 3%;
+    right: 3%;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .qr-beam::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, transparent, #f2dc9e 20%, var(--color-gold-400) 50%, #f2dc9e 80%, transparent);
+    box-shadow:
+      0 0 14px 3px rgb(207 167 90 / 0.65),
+      0 -10px 18px -6px rgb(255 248 225 / 0.9);
+  }
+  /* Gold ring that flashes once when the "scan" completes. */
+  .qr-confirm {
+    position: absolute;
+    inset: -5px;
+    border-radius: 20px;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow:
+      0 0 0 2px var(--color-gold-400),
+      0 0 22px 3px rgb(207 167 90 / 0.5);
+  }
+  /* Viewfinder corners, just outside the white box (never over the code). */
+  .qr-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 0 solid var(--color-gold-500);
+    pointer-events: none;
+  }
+  .qr-corner--tl {
+    top: -10px;
+    left: -10px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+    border-top-left-radius: 8px;
+  }
+  .qr-corner--tr {
+    top: -10px;
+    right: -10px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-top-right-radius: 8px;
+  }
+  .qr-corner--bl {
+    bottom: -10px;
+    left: -10px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-bottom-left-radius: 8px;
+  }
+  .qr-corner--br {
+    bottom: -10px;
+    right: -10px;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+    border-bottom-right-radius: 8px;
+  }
+
+  /* Infinite loops pause while their section is off screen (see buildScroll). */
+  .is-offscreen,
+  .is-offscreen *,
+  .is-offscreen *::before,
+  .is-offscreen *::after {
+    animation-play-state: paused !important;
+  }
+
+  /* Form */
+  .field {
+    width: 100%;
+    border-radius: 14px;
+    background: rgb(255 253 248 / 0.9);
+    box-shadow: inset 0 0 0 1px rgb(207 167 90 / 0.55);
+    padding: 0.85rem 1rem;
+    font-size: 1.15rem;
+    color: var(--color-ink);
+    transition: box-shadow 0.3s;
+  }
+  .field::placeholder {
+    color: rgb(103 93 80 / 0.6);
+    font-style: italic;
+  }
+  .field:focus {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1.5px var(--color-gold-500),
+      0 0 0 4px rgb(224 194 126 / 0.3);
+  }
+  .field[aria-invalid="true"] {
+    box-shadow: inset 0 0 0 1.5px #b4533c;
+  }
+
+  .heartbeat {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: heartbeat 2.4s ease-in-out infinite;
+  }
+
+  .scroll-cue__line {
+    animation: scroll-cue 2.4s var(--ease-luxe) infinite;
+  }
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes sway {
+  from {
+    transform: rotate(-2.6deg);
+  }
+  to {
+    transform: rotate(2.6deg);
+  }
+}
+@keyframes flame {
+  0%,
+  100% {
+    transform: scale(1, 1) skewX(0deg);
+  }
+  25% {
+    transform: scale(0.94, 1.12) skewX(3deg);
+  }
+  50% {
+    transform: scale(1.04, 0.92) skewX(-2deg);
+  }
+  75% {
+    transform: scale(0.97, 1.07) skewX(1.5deg);
+  }
+}
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  55% {
+    opacity: 0.72;
+    transform: scale(0.97);
+  }
+  80% {
+    opacity: 0.95;
+    transform: scale(1.02);
+  }
+}
+@keyframes breathe {
+  from {
+    transform: rotate(-1.2deg) scale(1);
+  }
+  to {
+    transform: rotate(1.4deg) scale(1.015);
+  }
+}
+@keyframes pulse-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+@keyframes sheen {
+  from {
+    transform: translateX(-130%);
+  }
+  40%,
+  to {
+    transform: translateX(130%);
+  }
+}
+@keyframes digit-in {
+  from {
+    transform: translateY(-60%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes heartbeat {
+  0%,
+  45%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.18);
+  }
+  24% {
+    transform: scale(1);
+  }
+  34% {
+    transform: scale(1.12);
+  }
+}
+@keyframes scroll-cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: 50% 0;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: 50% 0;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: 50% 100%;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: 50% 100%;
+  }
+}
+@keyframes map-ping {
+  from {
+    transform: scale(0.12);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes scan {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(100%);
+  }
+}
+@keyframes draw-check {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

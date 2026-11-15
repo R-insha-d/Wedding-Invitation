@@ -157,23 +157,27 @@ export function Venue() {
         {/* Size container: every layer derives the same ogee crown from its cqw width. */}
         <div className="map-shell @container">
           <span aria-hidden="true" className="js-map-shadow map-shell__shadow ogee" />
-          <div className="js-map map-frame ogee aspect-[4/4.5] sm:aspect-auto sm:h-full sm:min-h-[22rem]">
+          <div className="js-map map-frame aspect-[4/4.5] sm:aspect-auto sm:h-full sm:min-h-[22rem]">
+            {/* Frame layers are siblings of the map window, so the embedded map
+                sits under a single mask (nested masks made it jitter on phones). */}
+            <span aria-hidden="true" className="map-frame__edge ogee" />
             <span aria-hidden="true" className="map-frame__mat ogee" />
-            <div className="map-frame__inner ogee">
-              <div className="map-frame__window ogee">
-                {/* A still preview: taps open Google Maps instead of fighting the page scroll. */}
-                <div inert className="js-map-iframe map-frame__map">
-                  <iframe
-                    title={`Map showing ${name}, ${area}`}
-                    src={mapEmbedUrl}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    tabIndex={-1}
-                  />
-                  <span aria-hidden="true" className="map-ping" />
-                </div>
-                <span aria-hidden="true" className="map-frame__glow" />
+            <span aria-hidden="true" className="map-frame__hairline ogee" />
+            <div className="map-frame__window ogee">
+              {/* A still preview: taps open Google Maps instead of fighting the page scroll. */}
+              <div inert className="js-map-iframe map-frame__map">
+                <iframe
+                  title={`Map showing ${name}, ${area}`}
+                  src={mapEmbedUrl}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  tabIndex={-1}
+                />
+                <span aria-hidden="true" className="map-ping" />
               </div>
+              <span aria-hidden="true" className="map-frame__glow" />
+              {/* Lifts away on entrance; the map itself never moves or clips. */}
+              <span aria-hidden="true" className="js-map-veil map-frame__veil" />
             </div>
             <span aria-hidden="true" className="map-chip">
               Open in Maps

@@ -279,7 +279,9 @@ export function createPetalEngine(host: HTMLElement): PetalEngine {
     const t = timer.getElapsed();
     const b = bounds();
 
-    const scrollShift = ((scrollY - lastScroll) / viewportH) * b.h * 0.35;
+    // Phones redraw at 30 fps while the page scrolls at 60: tying petals to the
+    // scroll there makes them step against the content. They just drift.
+    const scrollShift = small ? 0 : ((scrollY - lastScroll) / viewportH) * b.h * 0.35;
     lastScroll = scrollY;
 
     stepGroup(petals, petalState, dt, t, scrollShift);

@@ -505,6 +505,9 @@ html.lenis body {
 
   /* ---------- Countdown ---------- */
   .tile {
+    /* How much of the gold outline is drawn, from the crown down both sides
+       (0deg → 180deg). GSAP traces it on entrance; resting state is drawn. */
+    --trace: 180deg;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -514,14 +517,56 @@ html.lenis body {
     border-radius: 999px 999px 14px 14px;
     background: linear-gradient(180deg, #fffdf8, #f7eedd);
     box-shadow:
-      inset 0 0 0 1px var(--color-gold-300),
       inset 0 0 0 5px #fffdf8,
       inset 0 0 0 6px rgb(224 194 126 / 0.45),
       0 18px 30px -22px rgb(110 86 40 / 0.55);
   }
-  .digit {
+  .tile::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1.25px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg,
+      var(--color-gold-400) 0deg var(--trace),
+      transparent var(--trace) calc(360deg - var(--trace)),
+      var(--color-gold-400) calc(360deg - var(--trace))
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+
+  /* Odometer digits: a 0–9 strip per digit, rolled with transform (compositor). */
+  .odo {
+    display: inline-flex;
+  }
+  .odo-digit {
     display: inline-block;
-    animation: digit-in 0.55s var(--ease-luxe);
+    height: 1.1em;
+    overflow: hidden;
+  }
+  .odo-strip {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.6s var(--ease-luxe);
+  }
+  .odo-strip > span {
+    height: 1.1em;
+    line-height: 1.1;
+    text-align: center;
+  }
+  /* First reveal: a longer roll, staggered tile by tile (--i set per tile). */
+  .odo--intro .odo-strip {
+    transition-duration: 1.7s;
+    transition-delay: calc(var(--i, 0) * 0.14s);
   }
 
   /* Rolling "05" in the date block */
@@ -580,6 +625,12 @@ html.lenis body {
     --pad: clamp(7px, 2.4cqw, 10px);
     position: relative;
     border-radius: 0 0 18px 18px;
+  }
+  .map-frame__edge {
+    --w: 100cqw;
+    position: absolute;
+    inset: 0;
+    border-radius: 0 0 18px 18px;
     background: linear-gradient(165deg, #e3c47c 0%, #b98e3d 38%, #dcbb70 62%, #8a6620 100%);
   }
   .map-frame__mat {
@@ -589,23 +640,33 @@ html.lenis body {
     border-radius: 0 0 17px 17px;
     background: linear-gradient(180deg, #fffdf8 0%, #fbf4e6 100%);
   }
-  .map-frame__inner {
+  .map-frame__hairline {
     --w: calc(100cqw - 2 * var(--pad));
     position: absolute;
     inset: var(--pad);
-    z-index: 1;
     border-radius: 0 0 10px 10px;
     background: var(--color-gold-300);
   }
   .map-frame__window {
     --w: calc(100cqw - 2 * var(--pad) - 2px);
     position: absolute;
-    inset: 1px;
+    inset: calc(var(--pad) + 1px);
+    z-index: 1;
     overflow: hidden;
     /* Small bottom radius so Google's attribution line isn't clipped. */
     border-radius: 0 0 9px 9px;
     background: var(--color-paper);
     isolation: isolate;
+  }
+  /* Ivory veil that rises into the arch to reveal the map (resting: gone). */
+  .map-frame__veil {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    transform-origin: 50% 0;
+    transform: scaleY(0);
+    background: linear-gradient(180deg, #fffdf8 0%, #f6ecda 100%);
+    pointer-events: none;
   }
   /* Gold keystone + finial at the apex; outside the mask so it isn't clipped. */
   .map-keystone {
@@ -920,16 +981,6 @@ html.lenis body {
   40%,
   to {
     transform: translateX(130%);
-  }
-}
-@keyframes digit-in {
-  from {
-    transform: translateY(-60%);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
   }
 }
 @keyframes heartbeat {

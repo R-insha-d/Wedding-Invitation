@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 
 /*
  * A once-per-second clock shared by every subscriber. The server snapshot is
@@ -55,10 +55,58 @@ function splitDuration(ms: number) {
   return values;
 }
 
+const DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+/** One odometer digit: a 0–9 strip slid into place (CSS transitions the roll). */
+function RollingDigit({ value }: { value: number }) {
+  return (
+    <span className="odo-digit">
+      <span className="odo-strip" style={{ transform: `translateY(${-value * 10}%)` }}>
+        {DIGITS.map((d) => (
+          <span key={d}>{d}</span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
+type Phase = "waiting" | "intro" | "live";
+
 export function Countdown({ start, end }: { start: string; end: string }) {
   const current = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const startMs = Date.parse(start);
   const endMs = Date.parse(end);
+  const gridRef = useRef<HTMLDivElement>(null);
+  // Tiles show 00 until revealed, then roll up to the real values once.
+  const [phase, setPhase] = useState<Phase>("waiting");
+
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid || phase !== "waiting") return;
+    const reveal = () => setPhase("intro");
+    // The scroll timeline announces when the tiles are in place (buildScroll)…
+    grid.addEventListener("countdown:reveal", reveal);
+    // …with a fallback for reduced motion: once visible, roll after a beat.
+    let timer = 0;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !timer) timer = window.setTimeout(reveal, 2400);
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(grid);
+    return () => {
+      grid.removeEventListener("countdown:reveal", reveal);
+      io.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "intro") return;
+    const timer = window.setTimeout(() => setPhase("live"), 2600);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
   if (current !== 0 && current >= startMs) {
     const live = current < endMs;
@@ -83,20 +131,25 @@ export function Countdown({ start, end }: { start: string; end: string }) {
       ? "Counting down to the wedding"
       : `${values[0].value} days, ${values[1].value} hours and ${values[2].value} minutes to go`;
 
+  const rolling = phase !== "waiting" && current !== 0;
+
   return (
-    <div className="js-tiles grid grid-cols-4 gap-[clamp(.4rem,2.2cqw,1rem)]" role="timer" aria-label={summary}>
-      {values.map(({ label, value }) => {
-        const text = current === 0 ? "--" : String(value).padStart(2, "0");
+    <div
+      ref={gridRef}
+      className={`js-tiles grid grid-cols-4 gap-[clamp(.4rem,2.2cqw,1rem)] ${phase === "intro" ? "odo--intro" : ""}`}
+      role="timer"
+      aria-label={summary}
+    >
+      {values.map(({ label, value }, index) => {
+        const digits = String(rolling ? value : 0).padStart(2, "0");
         return (
-          <div key={label} className="js-tile tile" aria-hidden="true">
-            <span className="flex font-serif text-[clamp(2rem,9.5cqw,3.3rem)] leading-none font-semibold text-ink lining-nums tabular-nums">
-              {[...text].map((char, i) => (
-                <span key={`${i}-${char}`} className="digit">
-                  {char}
-                </span>
+          <div key={label} className="js-tile tile" aria-hidden="true" style={{ "--i": index } as CSSProperties}>
+            <span className="odo font-serif text-[clamp(2rem,9.5cqw,3.3rem)] font-semibold text-ink lining-nums tabular-nums">
+              {[...digits].map((d, i) => (
+                <RollingDigit key={digits.length - i} value={Number(d)} />
               ))}
             </span>
-            <span className="font-display text-[clamp(.5rem,1.9cqw,.66rem)] tracking-[0.22em] text-gold-600 uppercase">
+            <span className="js-tile-label font-display text-[clamp(.5rem,1.9cqw,.66rem)] tracking-[0.22em] text-gold-600 uppercase">
               {label}
             </span>
           </div>

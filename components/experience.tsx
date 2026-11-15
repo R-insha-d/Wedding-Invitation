@@ -194,10 +194,14 @@ function buildGateOpen(root: HTMLElement, motion: boolean, onReveal: () => void,
         delay: OPEN,
       });
 
-      calls.push(
-        gsap.delayedCall((OPEN + 250) / 1000, () => emit("open")),
-        gsap.delayedCall((OPEN + 450) / 1000, onReveal),
-      );
+      // Each fires once: on GSAP's clock normally, or at the latest when the gate is gone.
+      // (The doors run on the browser's animation clock; after the guest switches apps
+      // mid-opening the two clocks can disagree, and the page must never stay locked.)
+      let opened = false;
+      let revealed = false;
+      const fireOpen = () => void (!opened && ((opened = true), emit("open")));
+      const fireReveal = () => void (!revealed && ((revealed = true), onReveal()));
+      calls.push(gsap.delayedCall((OPEN + 250) / 1000, fireOpen), gsap.delayedCall((OPEN + 450) / 1000, fireReveal));
 
       const [fade] = run([gate], [{ opacity: 1 }, { opacity: 0 }], {
         duration: 800,
@@ -206,6 +210,8 @@ function buildGateOpen(root: HTMLElement, motion: boolean, onReveal: () => void,
       });
       fade.finished.then(
         () => {
+          fireOpen();
+          fireReveal();
           active = false;
           onDone();
         },
@@ -270,6 +276,27 @@ function buildHero(root: HTMLElement) {
  * "prints" it top to bottom, a confirm ring flashes, then the caption settles
  * and the idle scan line resumes. Ends on a clean, unclipped QR.
  */
+/**
+ * Countdown tiles: they rise in one by one, each gold outline traces itself
+ * from the crown down both sides (--trace), the labels settle, and the digits
+ * roll up from 00 like an odometer (Countdown listens for "countdown:reveal").
+ */
+function tilesTimeline(scope: Element) {
+  const tl = gsap.timeline();
+  const tiles = all(scope, ".js-tile");
+  if (!tiles.length) return tl;
+  tl.from(tiles, { autoAlpha: 0, y: 28, scale: 0.94, duration: 1, ease: "power3.out", stagger: 0.1 }, 0)
+    .fromTo(
+      tiles,
+      { "--trace": "0deg" },
+      { "--trace": "180deg", duration: 1.4, ease: "power2.inOut", stagger: 0.1 },
+      0.1,
+    )
+    .from(all(scope, ".js-tile-label"), { autoAlpha: 0, letterSpacing: "0.6em", duration: 1, stagger: 0.1 }, 0.45)
+    .call(() => one(scope, ".js-tiles")?.dispatchEvent(new Event("countdown:reveal")), undefined, 0.5);
+  return tl;
+}
+
 function qrTimeline(card: Element) {
   const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
   const corners = all(card, ".js-qr-corner"); // tl, tr, bl, br
@@ -484,21 +511,8 @@ function buildScroll(root: HTMLElement) {
         1.3,
       )
       .add(write(one(el, ".js-write"), 2.4), 0.6)
-      .from(
-        all(el, ".js-tile"),
-        {
-          autoAlpha: 0,
-          rotateX: -100,
-          y: 20,
-          transformPerspective: 700,
-          transformOrigin: "50% 0%",
-          duration: 1.2,
-          ease: "back.out(1.4)",
-          stagger: 0.12,
-        },
-        1.6,
-      )
-      .from(all(el, ".js-blessing"), { autoAlpha: 0, y: 16, duration: 1.1 }, 2.4);
+      .add(tilesTimeline(el), 1.5)
+      .from(all(el, ".js-blessing"), { autoAlpha: 0, y: 16, duration: 1.1 }, 2.6);
   });
 
   // Venue
@@ -515,13 +529,11 @@ function buildScroll(root: HTMLElement) {
       tl.from(split.chars, { autoAlpha: 0, yPercent: 60, duration: 0.9, stagger: 0.045 }, 0.5);
     }
     tl.from(all(el, ".js-venue-area"), { autoAlpha: 0, y: 12, duration: 0.9 }, 1)
-      .fromTo(
-        all(el, ".js-map"),
-        { clipPath: "circle(0% at 50% 45%)" },
-        { clipPath: "circle(85% at 50% 45%)", duration: 1.8, ease: "power3.inOut", clearProps: "clipPath" },
-        0.9,
-      )
-      .from(all(el, ".js-map-iframe"), { scale: 1.25, duration: 2.2, clearProps: "transform" }, 0.9)
+      // The frame fades in and an ivory veil rises into the arch. The embedded
+      // map is never transformed or clipped: animating an ancestor of a
+      // cross-origin iframe made it shake against its frame while scrolling.
+      .from(all(el, ".js-map"), { autoAlpha: 0, duration: 0.9, ease: "power2.out" }, 0.9)
+      .fromTo(all(el, ".js-map-veil"), { scaleY: 1 }, { scaleY: 0, duration: 1.5, ease: "power3.inOut" }, 1.15)
       .from(all(el, ".js-map-shadow"), { autoAlpha: 0, duration: 1.4, ease: "power2.out" }, 1.5)
       .from(all(el, ".js-map-keystone"), { autoAlpha: 0, scale: 0, duration: 0.8, ease: "back.out(3)" }, 2.3)
       .from(all(el, ".js-venue-btn"), { autoAlpha: 0, y: 20, duration: 0.9, stagger: 0.12 }, 1.9);
@@ -548,12 +560,16 @@ function buildScroll(root: HTMLElement) {
     ScrollTrigger.create({ trigger: el, start: "top 95%", once: true, animation: floralTimeline(el) });
   });
 
-  // Sage arches drift for depth.
-  gsap.to(all(root, ".js-sage-arch"), {
-    yPercent: -9,
-    ease: "none",
-    scrollTrigger: { trigger: root, start: "top top", end: "bottom bottom", scrub: 1 },
-  });
+  // Sage arches drift for depth — mouse/trackpad only. On phones the page
+  // scrolls on the compositor while this runs on the main thread, so the
+  // fixed arches lag a frame behind and visibly shake.
+  if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    gsap.to(all(root, ".js-sage-arch"), {
+      yPercent: -9,
+      ease: "none",
+      scrollTrigger: { trigger: root, start: "top top", end: "bottom bottom", scrub: 1 },
+    });
+  }
 
   // The inner gold frame grows with your reading progress.
   const card = one(root, ".arch-card");
@@ -653,6 +669,7 @@ export function Experience({ children }: { children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
   const openRef = useRef<() => void>(() => {});
   const openedRef = useRef(false);
+  const lenisRef = useRef<Lenis | undefined>(undefined);
   const [gateDone, setGateDone] = useState(false);
 
   useGSAP(
@@ -665,32 +682,39 @@ export function Experience({ children }: { children: ReactNode }) {
       if (!openedRef.current) window.scrollTo(0, 0);
 
       const mm = gsap.matchMedia();
+
+      // Lenis smooth scrolling only with a mouse or trackpad. Touch screens keep the phone's
+      // own momentum scrolling: it runs off the main thread, so it can't stutter while the
+      // page animates (Lenis smoothing touch input made phones lag). Its own matchMedia
+      // context, so attaching/removing a mouse (iPad keyboard, 2-in-1 tablet mode) only adds
+      // or removes Lenis instead of tearing down the gate and every animation.
+      mm.add("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)", () => {
+        const lenis = new Lenis({ lerp: 0.085, anchors: true, autoRaf: false });
+        const tick = (time: number) => lenis.raf(time * 1000);
+        lenis.on("scroll", ScrollTrigger.update);
+        gsap.ticker.add(tick);
+        if (!openedRef.current) lenis.stop();
+        lenisRef.current = lenis;
+        return () => {
+          gsap.ticker.remove(tick);
+          lenis.destroy();
+          lenisRef.current = undefined;
+        };
+      });
+
       mm.add(
-        {
-          motion: "(prefers-reduced-motion: no-preference)",
-          reduce: "(prefers-reduced-motion: reduce)",
-          // A mouse or trackpad. Touch screens keep the phone's own momentum scrolling:
-          // it runs off the main thread, so it can't stutter while the page animates
-          // (Lenis smoothing touch input made phones lag).
-          fine: "(hover: hover) and (pointer: fine)",
-        },
+        { motion: "(prefers-reduced-motion: no-preference)", reduce: "(prefers-reduced-motion: reduce)" },
         (context) => {
           const motion = Boolean(context.conditions?.motion);
-
-          let lenis: Lenis | undefined;
-          const tick = (time: number) => lenis?.raf(time * 1000);
-          if (motion && context.conditions?.fine) {
-            lenis = new Lenis({ lerp: 0.085, anchors: true, autoRaf: false });
-            lenis.on("scroll", ScrollTrigger.update);
-            gsap.ticker.add(tick);
-            gsap.ticker.lagSmoothing(0);
-            if (!openedRef.current) lenis.stop();
-          }
+          // GSAP's clock follows real time even after a dropped frame (Lenis relies on it, and
+          // the gate's delayed calls must keep pace with the compositor-driven doors).
+          if (motion) gsap.ticker.lagSmoothing(0);
 
           // Without Lenis (phones), in-page links like the hero's "Scroll" cue still glide,
           // using the browser's native smooth scroll. A CSS scroll-behavior rule wouldn't
           // work: ScrollTrigger forces scroll-behavior to "auto" on the page.
           const glideToAnchor = (event: MouseEvent) => {
+            if (lenisRef.current) return; // Lenis handles anchors itself (anchors: true)
             const link = (event.target as Element | null)?.closest('a[href^="#"]');
             const id = link?.getAttribute("href")?.slice(1);
             const target = id ? document.getElementById(id) : null;
@@ -698,7 +722,7 @@ export function Experience({ children }: { children: ReactNode }) {
             event.preventDefault();
             target.scrollIntoView({ behavior: "smooth", block: "start" });
           };
-          if (motion && !lenis) scope.addEventListener("click", glideToAnchor);
+          if (motion) scope.addEventListener("click", glideToAnchor);
 
           // The page's endless CSS loops hold still behind the closed gate (the SVG ones
           // repaint every frame). Paused per element with an inline style: an html class plus a
@@ -722,7 +746,7 @@ export function Experience({ children }: { children: ReactNode }) {
             // The gate blocks touch panning while closed (see .gate); let touches through
             // to the page as soon as it starts revealing it.
             one(scope, ".js-gate")?.style.setProperty("pointer-events", "none");
-            lenis?.start();
+            lenisRef.current?.start();
             hero?.play();
             one(scope, "#top")?.focus({ preventScroll: true });
           };
@@ -764,9 +788,7 @@ export function Experience({ children }: { children: ReactNode }) {
             gate.kill();
             releaseLoops();
             scope.removeEventListener("click", glideToAnchor);
-            gsap.ticker.remove(tick);
-            if (lenis) gsap.ticker.lagSmoothing(500, 33); // GSAP's default
-            lenis?.destroy();
+            if (motion) gsap.ticker.lagSmoothing(500, 33); // GSAP's default
           };
         },
       );

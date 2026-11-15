@@ -261,6 +261,12 @@ html.lenis body {
   /* ---------- Gate (opening doors) ---------- */
   .gate {
     perspective: 2400px;
+    /*
+     * Phones scroll natively (no Lenis there), and iOS 15 and older ignore
+     * overflow:hidden on <html>: stop a swipe on the closed doors from
+     * scrolling the hidden page underneath. Taps on the seal still work.
+     */
+    touch-action: none;
   }
   /* Revealed by the gate intro timeline (or instantly with reduced motion). */
   .gate .js-gate-copy,
@@ -281,11 +287,6 @@ html.lenis body {
   }
   .door__rosette {
     will-change: transform;
-  }
-  /* Everything behind the closed gate holds still (SVG loops repaint every frame). */
-  html.is-locked
-    :is(.lantern-sway, .lantern-flame, .lantern-glow, .floral-breathe, .heartbeat, .scroll-cue__line) {
-    animation-play-state: paused;
   }
   .door {
     position: absolute;
@@ -802,11 +803,15 @@ html.lenis body {
     border-bottom-right-radius: 8px;
   }
 
-  /* Infinite loops pause while their section is off screen (see buildScroll). */
-  .is-offscreen,
-  .is-offscreen *,
-  .is-offscreen *::before,
-  .is-offscreen *::after {
+  /*
+   * Infinite loops pause while their section is off screen (buildScroll puts
+   * this class on the looping elements themselves). A class on the section
+   * with a descendant selector made Chrome restyle every node inside it
+   * (~1000 floral shapes) on every toggle: a long hitch on phones.
+   */
+  .loop-paused,
+  .loop-paused::before,
+  .loop-paused::after {
     animation-play-state: paused !important;
   }
 

@@ -604,14 +604,21 @@ function buildScroll(root: HTMLElement) {
 
   // Infinite CSS loops (lanterns, florals, hearts, map ping, button sheen)
   // pause while their section is off screen; on phones they'd keep repainting.
+  // The class goes on the looping elements themselves: toggling one on the
+  // section made Chrome restyle every descendant (~1000 nodes) each time.
+  const LOOPS =
+    ".lantern-sway, .lantern-flame, .lantern-glow, .floral-breathe, .heartbeat, .qr-scan, .scroll-cue__line, .btn-gold, .map-ping";
   const looping = all(root, '#top, [data-anim="countdown"], [data-anim="venue"], [data-anim="closing"]');
-  looping.forEach((el) => {
-    el.classList.toggle("is-offscreen", !onScreen(el));
+  const loopsOf = looping.map((section) => all<Element>(section, LOOPS));
+  const setPaused = (els: Element[], paused: boolean) =>
+    els.forEach((node) => node.classList.toggle("loop-paused", paused));
+  looping.forEach((section, i) => {
+    setPaused(loopsOf[i], !onScreen(section));
     ScrollTrigger.create({
-      trigger: el,
+      trigger: section,
       start: "top bottom",
       end: "bottom top",
-      onToggle: (self) => el.classList.toggle("is-offscreen", !self.isActive),
+      onToggle: (self) => setPaused(loopsOf[i], !self.isActive),
     });
   });
 
@@ -637,7 +644,7 @@ function buildScroll(root: HTMLElement) {
     return () => {
       offOpen();
       cancelPriming.forEach((cancel) => cancel());
-      looping.forEach((el) => el.classList.remove("is-offscreen"));
+      loopsOf.forEach((els) => setPaused(els, false));
     };
   });
 }
@@ -659,30 +666,62 @@ export function Experience({ children }: { children: ReactNode }) {
 
       const mm = gsap.matchMedia();
       mm.add(
-        { motion: "(prefers-reduced-motion: no-preference)", reduce: "(prefers-reduced-motion: reduce)" },
+        {
+          motion: "(prefers-reduced-motion: no-preference)",
+          reduce: "(prefers-reduced-motion: reduce)",
+          // A mouse or trackpad. Touch screens keep the phone's own momentum scrolling:
+          // it runs off the main thread, so it can't stutter while the page animates
+          // (Lenis smoothing touch input made phones lag).
+          fine: "(hover: hover) and (pointer: fine)",
+        },
         (context) => {
           const motion = Boolean(context.conditions?.motion);
 
           let lenis: Lenis | undefined;
           const tick = (time: number) => lenis?.raf(time * 1000);
-          if (motion) {
-            lenis = new Lenis({
-              lerp: 0.085,
-              anchors: true,
-              autoRaf: false,
-              // Most guests open this on a phone: smooth touch scrolling too, not just the wheel.
-              syncTouch: true,
-              syncTouchLerp: 0.09,
-            });
+          if (motion && context.conditions?.fine) {
+            lenis = new Lenis({ lerp: 0.085, anchors: true, autoRaf: false });
             lenis.on("scroll", ScrollTrigger.update);
             gsap.ticker.add(tick);
             gsap.ticker.lagSmoothing(0);
             if (!openedRef.current) lenis.stop();
           }
 
+          // Without Lenis (phones), in-page links like the hero's "Scroll" cue still glide,
+          // using the browser's native smooth scroll. A CSS scroll-behavior rule wouldn't
+          // work: ScrollTrigger forces scroll-behavior to "auto" on the page.
+          const glideToAnchor = (event: MouseEvent) => {
+            const link = (event.target as Element | null)?.closest('a[href^="#"]');
+            const id = link?.getAttribute("href")?.slice(1);
+            const target = id ? document.getElementById(id) : null;
+            if (!target) return;
+            event.preventDefault();
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+          };
+          if (motion && !lenis) scope.addEventListener("click", glideToAnchor);
+
+          // The page's endless CSS loops hold still behind the closed gate (the SVG ones
+          // repaint every frame). Paused per element with an inline style: an html class plus a
+          // descendant selector would make Chrome restyle the whole page when the gate opens,
+          // right as the hero animation starts. Inline also can't clash with buildScroll's
+          // off-screen .loop-paused class, which only ever pauses too.
+          const held =
+            motion && !openedRef.current
+              ? all<HTMLElement | SVGElement>(
+                  scope,
+                  ".lantern-sway, .lantern-flame, .lantern-glow, .floral-breathe, .heartbeat, .scroll-cue__line",
+                )
+              : [];
+          held.forEach((el) => el.style.setProperty("animation-play-state", "paused"));
+          const releaseLoops = () => held.forEach((el) => el.style.removeProperty("animation-play-state"));
+
           const reveal = () => {
             openedRef.current = true;
             html.classList.remove("is-locked");
+            releaseLoops();
+            // The gate blocks touch panning while closed (see .gate); let touches through
+            // to the page as soon as it starts revealing it.
+            one(scope, ".js-gate")?.style.setProperty("pointer-events", "none");
             lenis?.start();
             hero?.play();
             one(scope, "#top")?.focus({ preventScroll: true });
@@ -723,7 +762,10 @@ export function Experience({ children }: { children: ReactNode }) {
           return () => {
             cancelIdle();
             gate.kill();
+            releaseLoops();
+            scope.removeEventListener("click", glideToAnchor);
             gsap.ticker.remove(tick);
+            if (lenis) gsap.ticker.lagSmoothing(500, 33); // GSAP's default
             lenis?.destroy();
           };
         },

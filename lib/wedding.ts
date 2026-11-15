@@ -14,8 +14,8 @@ export const wedding = {
 
   bismillah: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
   verse: {
-    text: "And among His signs is that He created for you spouses from among yourselves, that you may find tranquility in them and He placed between you affection and mercy.",
-    reference: "Qur’an 30:21",
+    text: "Our Lord, grant us from among our wives and offspring comfort to our eyes and make us an example for the righteous.",
+    reference: "Qur’an 25:74",
   },
   request:
     "request the honour of your presence, with family, at the marriage of our beloved son",

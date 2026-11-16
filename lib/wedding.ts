@@ -17,10 +17,9 @@ export const wedding = {
     text: "Our Lord, grant us from among our wives and offspring comfort to our eyes and make us an example for the righteous.",
     reference: "Qur’an 25:74",
   },
-  request:
-    "request the honour of your presence, with family, at the marriage of our beloved son",
-  tagline: "Where two hearts become one",
-  blessing: "Your prayers and presence will make our joy complete.",
+  request: "joyfully invite you and your family, to celebrate the wedding of our dear son",
+  tagline: "Two souls, one journey",
+  blessing: "Your blessings and duas will make our day truly special.",
 
   event: {
     /** Indian Standard Time (UTC+05:30). */
@@ -65,7 +64,7 @@ export const calendarEndUtc = toCalendarUtc(wedding.event.end);
 
 export const calendarTitle = `Wedding of ${coupleLine}`;
 export const calendarLocation = `${wedding.venue.name}, ${wedding.venue.area}`;
-export const calendarDetails = `${wedding.groom.parents} request the honour of your presence, with family, at the marriage of ${wedding.groom.name} with ${wedding.bride.name}. Location: ${wedding.venue.mapsUrl}`;
+export const calendarDetails = `${wedding.groom.parents} joyfully invite you and your family to celebrate the wedding of ${wedding.groom.name} with ${wedding.bride.name}. Location: ${wedding.venue.mapsUrl}`;
 
 export const googleCalendarUrl =
   "https://calendar.google.com/calendar/render?" +

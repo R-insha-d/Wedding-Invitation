@@ -443,6 +443,95 @@ html.lenis body {
     );
   }
 
+  /* Bold white lettering on the gate (tap hint and date), softly engraved. */
+  .gate-text {
+    color: #fffaf0;
+    text-shadow:
+      0 1px 0 rgb(60 50 30 / 0.45),
+      0 2px 10px rgb(18 22 10 / 0.5);
+  }
+  /* Thin gold rule ending in a diamond, flanking "Tap to open". */
+  .gate-rule {
+    position: relative;
+    width: clamp(1.4rem, 7vw, 2.6rem);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e9cd86);
+  }
+  .gate-rule::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -3px;
+    width: 5px;
+    height: 5px;
+    translate: 0 -50%;
+    rotate: 45deg;
+    background: #e9cd86;
+  }
+  .gate-rule--end {
+    rotate: 180deg;
+  }
+  /* Small gold diamond between the date parts. */
+  .gate-gem {
+    width: 6px;
+    height: 6px;
+    flex: none;
+    rotate: 45deg;
+    background: linear-gradient(135deg, #fff3c8, #d6ab52);
+    box-shadow: 0 1px 3px rgb(18 22 10 / 0.5);
+  }
+
+  /* ---------- Music toggle ---------- */
+  .music-toggle {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    color: var(--color-gold-700);
+    background: rgb(255 252 245 / 0.9);
+    box-shadow:
+      inset 0 0 0 1px var(--color-gold-300),
+      inset 0 0 0 4px rgb(255 252 245 / 0.9),
+      inset 0 0 0 5px rgb(224 194 126 / 0.5),
+      0 10px 24px -10px rgb(110 86 40 / 0.6);
+    animation: music-in 0.7s var(--ease-luxe) 1.2s both;
+    transition: translate 0.4s var(--ease-luxe);
+  }
+  .music-toggle:hover {
+    translate: 0 -2px;
+  }
+  .music-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+  }
+  .music-bars > span {
+    width: 3px;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--color-gold-400), var(--color-gold-600));
+    transform-origin: 50% 100%;
+    animation: music-bar 1s ease-in-out infinite alternate;
+  }
+  .music-bars > span:nth-child(2) {
+    animation-duration: 0.7s;
+    animation-delay: -0.3s;
+  }
+  .music-bars > span:nth-child(3) {
+    animation-duration: 0.9s;
+    animation-delay: -0.6s;
+  }
+  .music-bars > span:nth-child(4) {
+    animation-duration: 0.6s;
+    animation-delay: -0.15s;
+  }
+
   /* ---------- Buttons ---------- */
   .btn-gold,
   .btn-ghost {
@@ -981,6 +1070,24 @@ html.lenis body {
   40%,
   to {
     transform: translateX(130%);
+  }
+}
+@keyframes music-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes music-bar {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
   }
 }
 @keyframes heartbeat {

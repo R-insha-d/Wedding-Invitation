@@ -2,6 +2,7 @@ import { ArchCard } from "@/components/arch-card";
 import { Divider } from "@/components/art/ornaments";
 import { SvgDefs } from "@/components/art/svg-defs";
 import { Experience } from "@/components/experience";
+import { MusicToggle } from "@/components/music-toggle";
 import { Hero } from "@/components/sections/hero";
 import {
   Closing,
@@ -40,6 +41,8 @@ export default function Home() {
           <Closing />
         </ArchCard>
       </main>
+
+      <MusicToggle />
     </Experience>
   );
 }

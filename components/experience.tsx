@@ -79,7 +79,7 @@ function drawStroke(paths: SVGPathElement[], vars: gsap.TweenVars) {
 }
 
 function buildGateIntro(root: HTMLElement) {
-  return gsap
+  const tl = gsap
     .timeline({ delay: 0.2 })
     .set(all(root, ".door__rosette"), { autoAlpha: 1 })
     .from(all(root, ".door__rosette .js-draw"), { drawSVG: 0, duration: 2.2, ease: "power2.inOut", stagger: 0.12 }, 0)
@@ -88,20 +88,60 @@ function buildGateIntro(root: HTMLElement) {
       { scale: 0, rotation: -120, transformOrigin: "50% 50%", duration: 1.2, ease: "back.out(2)" },
       0.9,
     )
-    // Transform + opacity only (no blur): these elements are their own GPU layers,
-    // so the fade never repaints the text.
-    .fromTo(
-      all(root, ".js-gate-copy"),
-      { autoAlpha: 0, y: 18 },
-      { autoAlpha: 1, y: 0, duration: 1.2, stagger: 0.16, ease: "power3.out" },
-      0.25,
-    )
-    .fromTo(
-      all(root, ".js-seal"),
-      { autoAlpha: 0, scale: 0, rotation: -40 },
-      { autoAlpha: 1, scale: 1, rotation: 0, duration: 1.4, ease: "back.out(1.7)" },
-      0.7,
+    // The text blocks are shown at once; their letters then arrive one by one.
+    .set(all(root, ".js-gate-copy"), { autoAlpha: 1 }, 0);
+
+  const splits: SplitText[] = [];
+  const letters = (selector: string) => {
+    const el = one(root, selector);
+    if (!el) return [];
+    const split = SplitText.create(el, { type: "words,chars" });
+    splits.push(split);
+    return split.chars;
+  };
+  const from = (targets: Element[], vars: gsap.TweenVars, at: number) => {
+    if (targets.length) tl.from(targets, vars, at);
+  };
+
+  // Arabic letters join up, so the Bismillah is written in right-to-left instead.
+  const arabic = one(root, '.js-gate-copy[lang="ar"]');
+  if (arabic) {
+    tl.fromTo(
+      arabic,
+      { clipPath: "inset(-30% 0% -30% 100%)" },
+      { clipPath: "inset(-30% 0% -30% 0%)", duration: 1.5, ease: "power2.inOut", clearProps: "clipPath" },
+      0.1,
     );
+  }
+
+  from(letters(".js-gate-invite"), { autoAlpha: 0, y: 12, duration: 0.6, stagger: 0.022, ease: "power2.out" }, 0.7);
+  from(
+    letters(".js-gate-names"),
+    {
+      autoAlpha: 0,
+      y: 24,
+      scale: 0.6,
+      rotation: -8,
+      transformOrigin: "50% 100%",
+      duration: 0.9,
+      stagger: 0.06,
+      ease: "back.out(2)",
+    },
+    1.4,
+  );
+  tl.fromTo(
+    all(root, ".js-seal"),
+    { autoAlpha: 0, scale: 0, rotation: -40 },
+    { autoAlpha: 1, scale: 1, rotation: 0, duration: 1.4, ease: "back.out(1.7)" },
+    1.9,
+  );
+  from(all(root, ".js-gate-rule"), { scaleX: 0, transformOrigin: "100% 50%", duration: 0.8, ease: "power2.out" }, 2.8);
+  from(letters(".js-gate-tap"), { autoAlpha: 0, y: 10, duration: 0.5, stagger: 0.05, ease: "power2.out" }, 2.8);
+  from(letters(".js-gate-date"), { autoAlpha: 0, y: 10, duration: 0.5, stagger: 0.05, ease: "power2.out" }, 3.3);
+  from(all(root, ".js-gate-gem"), { autoAlpha: 0, scale: 0, duration: 0.5, stagger: 0.25, ease: "back.out(3)" }, 3.45);
+
+  // Join the letters back up (restores the fonts' kerning, lightens the DOM).
+  return tl.call(() => splits.forEach((split) => split.revert()));
 }
 
 /** GSAP's power eases as CSS cubic-béziers, for the compositor-driven gate animation. */
